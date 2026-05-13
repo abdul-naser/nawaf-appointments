@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NawafAppointment</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="NawafAppointment.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+<link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+    // بيانات الربط (Config)
+    const firebaseConfig = {
+        databaseURL: "https://nawafappointments-default-rtdb.firebaseio.com/"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // وظيفة حفظ الموعد في قاعدة البيانات
+    window.saveToFirebase = (appointment) => {
+        const newRef = db.ref('appointments').push();
+        return newRef.set(appointment);
+    };
+
+    // وظيفة جلب كل المواعيد لعرضها في الجدول
+    window.loadFromFirebase = async () => {
+        const snapshot = await db.ref('appointments').once('value');
+        const data = snapshot.val();
+        if (!data) return [];
+        return Object.values(data);
+    };
+</script>
+</body>
+
+</html>
