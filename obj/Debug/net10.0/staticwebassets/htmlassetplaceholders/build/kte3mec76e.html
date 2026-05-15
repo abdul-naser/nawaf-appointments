@@ -5,8 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NawafAppointment</title>
-    <base href="/" />
-    <link href="_framework/dotnet.ugxga6kamv.js" rel="preload" as="script" fetchpriority="high" crossorigin="anonymous" integrity="sha256-bu9ZXytrMXpeltABHm7brSeUluqz3pJRUVmFjtl4gqE=" />
+<base href="/" />
+    <link href="_framework/dotnet.la6ybl4dc6.js" rel="preload" as="script" fetchpriority="high" crossorigin="anonymous" integrity="sha256-o8wUFY7Nwd6ytfTjcVV/EHMJIRYGojilbPhj9zjYkAQ=" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
@@ -16,9 +16,9 @@
     "./_content/Microsoft.DotNet.HotReload.WebAssembly.Browser/Microsoft.DotNet.HotReload.WebAssembly.Browser.lib.module.js": "./_content/Microsoft.DotNet.HotReload.WebAssembly.Browser/Microsoft.DotNet.HotReload.WebAssembly.Browser.99zm1jdh75.lib.module.js",
     "./_content/MudBlazor/MudBlazor.min.js": "./_content/MudBlazor/MudBlazor.min.jolev99wdd.js",
     "./_framework/blazor.webassembly.js": "./_framework/blazor.webassembly.zxhwjtv6sc.js",
+    "./_framework/dotnet.js": "./_framework/dotnet.la6ybl4dc6.js",
     "./_framework/dotnet.native.js": "./_framework/dotnet.native.mx9wzm9o5h.js",
     "./_framework/dotnet.runtime.js": "./_framework/dotnet.runtime.2zl32tp6ah.js",
-    "./_framework/dotnet.js": "./_framework/dotnet.ugxga6kamv.js",
     "./lib/bootstrap/dist/js/bootstrap.js": "./lib/bootstrap/dist/js/bootstrap.6jb4rtq6tt.js",
     "./lib/bootstrap/dist/js/bootstrap.bundle.min.js": "./lib/bootstrap/dist/js/bootstrap.bundle.min.493y06b0oq.js",
     "./lib/bootstrap/dist/js/bootstrap.bundle.js": "./lib/bootstrap/dist/js/bootstrap.bundle.uzsf70it53.js",
@@ -34,12 +34,12 @@
     "./_content/MudBlazor/MudBlazor.min.js": "sha256-QzjV54WPFDZoVGX1oYGL1g4pxgMR0AvEZ5Nfl3uvpOQ=",
     "./_framework/blazor.webassembly.js": "sha256-1xlHuu1iNOJiMMz2BCq95uekwHf6pdpTcgVNKVBboPs=",
     "./_framework/blazor.webassembly.zxhwjtv6sc.js": "sha256-1xlHuu1iNOJiMMz2BCq95uekwHf6pdpTcgVNKVBboPs=",
-    "./_framework/dotnet.js": "sha256-bu9ZXytrMXpeltABHm7brSeUluqz3pJRUVmFjtl4gqE=",
+    "./_framework/dotnet.js": "sha256-o8wUFY7Nwd6ytfTjcVV/EHMJIRYGojilbPhj9zjYkAQ=",
+    "./_framework/dotnet.la6ybl4dc6.js": "sha256-o8wUFY7Nwd6ytfTjcVV/EHMJIRYGojilbPhj9zjYkAQ=",
     "./_framework/dotnet.native.js": "sha256-tlrn00yvndmJzhFdKpELUlytdgWFyGFdTWjI10bgILU=",
     "./_framework/dotnet.native.mx9wzm9o5h.js": "sha256-tlrn00yvndmJzhFdKpELUlytdgWFyGFdTWjI10bgILU=",
     "./_framework/dotnet.runtime.2zl32tp6ah.js": "sha256-/ndm/PF1BeBT5mXzYAES79wNK5sIZIQKAGcUqPL9ZP8=",
     "./_framework/dotnet.runtime.js": "sha256-/ndm/PF1BeBT5mXzYAES79wNK5sIZIQKAGcUqPL9ZP8=",
-    "./_framework/dotnet.ugxga6kamv.js": "sha256-bu9ZXytrMXpeltABHm7brSeUluqz3pJRUVmFjtl4gqE=",
     "./lib/bootstrap/dist/js/bootstrap.6jb4rtq6tt.js": "sha256-nj2mo3yrIzODyQN0SvaivMIunrMiiGQEepgfUPcBhl0=",
     "./lib/bootstrap/dist/js/bootstrap.bundle.js": "sha256-igeMI3X+znsADOxxuBORANKLFu/oWYGTJ0x36Let2O4=",
     "./lib/bootstrap/dist/js/bootstrap.bundle.min.493y06b0oq.js": "sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=",
@@ -77,7 +77,6 @@
     <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
 <script>
     // بيانات الربط (Config)
     const firebaseConfig = {
@@ -87,20 +86,38 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // وظيفة حفظ الموعد في قاعدة البيانات
+    // دالة الحفظ (تتعامل مع الإضافة والتعديل بشكل صحيح بناءً على وجود الـ id)
     window.saveToFirebase = (appointment) => {
-        const newRef = db.ref('appointments').push();
-        return newRef.set(appointment);
+        if (appointment.id) {
+            // إذا كان له ID، نقوم بتحديث الموعد الحالي نفسه
+            return db.ref('appointments/' + appointment.id).set(appointment);
+        } else {
+            // إذا لم يكن له ID، نقوم بإضافة موعد جديد
+            const newRef = db.ref('appointments').push();
+            appointment.id = newRef.key; // حفظ الـ Key الجديد داخل الكائن
+            return newRef.set(appointment);
+        }
     };
 
-    // وظيفة جلب كل المواعيد لعرضها في الجدول
+    // دالة الحذف
+    window.deleteFromFirebase = (id) => {
+        return db.ref('appointments/' + id).remove();
+    };
+
+    // دالة الجلب الصحيحة (تم حذف التكرار وضمان دمج الـ ID مع البيانات)
     window.loadFromFirebase = async () => {
         const snapshot = await db.ref('appointments').once('value');
         const data = snapshot.val();
         if (!data) return [];
-        return Object.values(data);
+        
+        // تحويل البيانات من Object إلى List مع التأكد من حقن الـ ID القادم من Firebase
+        return Object.keys(data).map(key => ({
+            ...data[key],
+            id: key
+        }));
     };
 </script>
+
 </body>
 
 </html>

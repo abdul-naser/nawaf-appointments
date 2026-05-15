@@ -35,7 +35,6 @@
     <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
 <script>
     // بيانات الربط (Config)
     const firebaseConfig = {
@@ -45,20 +44,38 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // وظيفة حفظ الموعد في قاعدة البيانات
+    // دالة الحفظ (تتعامل مع الإضافة والتعديل بشكل صحيح بناءً على وجود الـ id)
     window.saveToFirebase = (appointment) => {
-        const newRef = db.ref('appointments').push();
-        return newRef.set(appointment);
+        if (appointment.id) {
+            // إذا كان له ID، نقوم بتحديث الموعد الحالي نفسه
+            return db.ref('appointments/' + appointment.id).set(appointment);
+        } else {
+            // إذا لم يكن له ID، نقوم بإضافة موعد جديد
+            const newRef = db.ref('appointments').push();
+            appointment.id = newRef.key; // حفظ الـ Key الجديد داخل الكائن
+            return newRef.set(appointment);
+        }
     };
 
-    // وظيفة جلب كل المواعيد لعرضها في الجدول
+    // دالة الحذف
+    window.deleteFromFirebase = (id) => {
+        return db.ref('appointments/' + id).remove();
+    };
+
+    // دالة الجلب الصحيحة (تم حذف التكرار وضمان دمج الـ ID مع البيانات)
     window.loadFromFirebase = async () => {
         const snapshot = await db.ref('appointments').once('value');
         const data = snapshot.val();
         if (!data) return [];
-        return Object.values(data);
+        
+        // تحويل البيانات من Object إلى List مع التأكد من حقن الـ ID القادم من Firebase
+        return Object.keys(data).map(key => ({
+            ...data[key],
+            id: key
+        }));
     };
 </script>
+
 </body>
 
 </html>

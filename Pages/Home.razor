@@ -21,12 +21,19 @@
             <MudTh>المستشفى</MudTh>
             <MudTh>التاريخ</MudTh>
             <MudTh>ملاحظات</MudTh>
+            <MudTh></MudTh> @* عمود جديد *@
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="الطبيب">@context.DoctorName</MudTd>
             <MudTd DataLabel="المستشفى">@context.HospitalName</MudTd>
             <MudTd DataLabel="التاريخ">@context.Date?.ToString("yyyy-MM-dd")</MudTd>
             <MudTd DataLabel="ملاحظات">@context.Note</MudTd>
+            <MudTd DataLabel="إجراءات">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"
+                               OnClick="@(() => PrepareEdit(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                               OnClick="@(() => DeleteAppointment(context.Id))" />
+            </MudTd>
         </RowTemplate>
     </MudTable>
 </MudContainer>
@@ -39,8 +46,9 @@
     <DialogContent>
         <MudTextField T="string" Label="اسم الطبيب" @bind-Value="newAppointment.DoctorName" Variant="Variant.Outlined"
                       Class="mb-3" />
-       @* قائمة اختيار المستشفى *@
-        <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" Variant="Variant.Outlined" Class="mb-3">
+        @* قائمة اختيار المستشفى *@
+        <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" Variant="Variant.Outlined"
+                   Class="mb-3">
             @foreach (var hospital in hospitals)
             {
                 <MudSelectItem Value="@hospital">@hospital</MudSelectItem>
@@ -50,7 +58,8 @@
         @* هذا الحقل سيظهر فقط إذا تم اختيار "أخرى" *@
         @if (showOtherHospitalInput)
         {
-<MudTextField T="string" Label="اكتب اسم المستشفى هنا" @bind-Value="newAppointment.HospitalName" Variant="Variant.Outlined" Class="mb-3" Color="Color.Secondary" />
+            <MudTextField T="string" Label="اكتب اسم المستشفى هنا" @bind-Value="newAppointment.HospitalName"
+                          Variant="Variant.Outlined" Class="mb-3" Color="Color.Secondary" />
         }
         <MudDatePicker Label="اختر التاريخ" @bind-Date="newAppointment.Date" Variant="Variant.Outlined" Class="mb-3" />
         <MudTextField T="string" Label="ملاحظات" @bind-Value="newAppointment.Note" Variant="Variant.Outlined"
@@ -71,12 +80,14 @@
     private bool isDialogVisible;
     private string searchString = "";
     private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
-    
+
     private List<Appointment> appointments = new List<Appointment>();
     private Appointment newAppointment = new Appointment();
 
     public class Appointment
     {
+        
+        public string? Id { get; set; } // أضف هذا السطر لتمييز كل موعد
         public string? DoctorName { get; set; }
         public string? HospitalName { get; set; }
         public DateTime? Date { get; set; }
@@ -89,23 +100,23 @@
         await LoadAppointments();
     }
 
-private async Task LoadAppointments()
-{
-    try 
+    private async Task LoadAppointments()
     {
-        // استخدمنا js الصغيرة هنا
-        var result = await js.InvokeAsync<List<Appointment>>("loadFromFirebase");
-        if (result != null)
+        try
         {
-            appointments = result;
-            StateHasChanged(); 
+            // استخدمنا js الصغيرة هنا
+            var result = await js.InvokeAsync<List<Appointment>>("loadFromFirebase");
+            if (result != null)
+            {
+                appointments = result;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-}
 
     private void OpenAddDialog()
     {
@@ -114,21 +125,21 @@ private async Task LoadAppointments()
         isDialogVisible = true;
     }
 
-  private async Task SaveAppointment()
-{
-    if (selectedHospital != "أخرى" && !string.IsNullOrEmpty(selectedHospital)) 
+    private async Task SaveAppointment()
     {
-        newAppointment.HospitalName = selectedHospital;
+        if (selectedHospital != "أخرى" && !string.IsNullOrEmpty(selectedHospital))
+        {
+            newAppointment.HospitalName = selectedHospital;
+        }
+
+        // استخدمنا js الصغيرة هنا أيضاً
+        await js.InvokeVoidAsync("saveToFirebase", newAppointment);
+
+        isDialogVisible = false;
+        selectedHospital = null;
+
+        await LoadAppointments();
     }
-
-    // استخدمنا js الصغيرة هنا أيضاً
-    await js.InvokeVoidAsync("saveToFirebase", newAppointment);
-
-    isDialogVisible = false;
-    selectedHospital = null;
-    
-    await LoadAppointments();
-}
 
     private void Cancel() => isDialogVisible = false;
 
@@ -139,4 +150,29 @@ private async Task LoadAppointments()
         if (element.HospitalName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) return true;
         return false;
     }
+
+    // دالة لتحضير البيانات للتعديل
+private void PrepareEdit(Appointment appointment)
+{
+    newAppointment = new Appointment 
+    { 
+        Id = appointment.Id,
+        DoctorName = appointment.DoctorName,
+        HospitalName = appointment.HospitalName,
+        Date = appointment.Date,
+        Note = appointment.Note 
+    };
+    selectedHospital = hospitals.Contains(appointment.HospitalName ?? "") ? appointment.HospitalName : "أخرى";
+    isDialogVisible = true;
+}
+
+// دالة الحذف
+private async Task DeleteAppointment(string? id)
+{
+    if (string.IsNullOrEmpty(id)) return;
+    
+    // استدعاء دالة حذف سنضيفها في الـ JavaScript
+    await js.InvokeVoidAsync("deleteFromFirebase", id);
+    await LoadAppointments(); // تحديث الجدول
+}
 }
