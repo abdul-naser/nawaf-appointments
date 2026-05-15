@@ -1,0 +1,5 @@
+C:\Users\abdul\NawafAppointment\bin\Release\net10.0\publish\wwwroot\index.html
+C:\Users\abdul\NawafAppointment\bin\Release\net10.0\publish\NawafAppointment.runtimeconfig.json
+C:\Users\abdul\NawafAppointment\bin\Release\net10.0\publish\dotnet.js
+C:\Users\abdul\NawafAppointment\bin\Release\net10.0\publish\e_sqlite3.a
+C:\Users\abdul\NawafAppointment\bin\Release\net10.0\publish\web.config

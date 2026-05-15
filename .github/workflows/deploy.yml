@@ -4,6 +4,18 @@ on:
   push:
     branches: [ main ]
 
+    # هذا الجزء يطلب الصلاحيات برمجياً
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # ... باقي الكود كما هو
+    
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
