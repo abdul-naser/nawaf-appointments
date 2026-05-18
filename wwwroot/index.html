@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="rtl">
 
 <head>
     <meta charset="utf-8" />
@@ -64,16 +64,26 @@
 
     // دالة الجلب الصحيحة (تم حذف التكرار وضمان دمج الـ ID مع البيانات)
     window.loadFromFirebase = async () => {
-        const snapshot = await db.ref('appointments').once('value');
-        const data = snapshot.val();
-        if (!data) return [];
+    const snapshot = await db.ref('appointments').once('value');
+    const data = snapshot.val();
+    if (!data) return [];
+    
+    // 1. تحويل البيانات من Object إلى مصفوفة (List) مع حقن الـ ID
+    const appointmentsList = Object.keys(data).map(key => ({
+        ...data[key],
+        id: key
+    }));
+
+    // 2. ترتيب المواعيد تصاعدياً (من الأقرب مستقبلاً إلى الأبعد) بناءً على حقل date
+    return appointmentsList.sort((a, b) => {
+        // إذا لم يكن هناك تاريخ لأي سبب، نضعه في النهاية
+        if (!a.date) return 1;
+        if (!b.date) return -1;
         
-        // تحويل البيانات من Object إلى List مع التأكد من حقن الـ ID القادم من Firebase
-        return Object.keys(data).map(key => ({
-            ...data[key],
-            id: key
-        }));
-    };
+        // تحويل النصوص إلى كائنات تاريخ ومقارنتها
+        return new Date(a.date) - new Date(b.date);
+    });
+};
 </script>
 
 </body>

@@ -2,6 +2,7 @@
 @using MudBlazor
 @inject IJSRuntime js
 
+
 <MudText Typo="Typo.h4" GutterBottom="true" Align="Align.Center" Class="mt-4">مواعيد المستشفى - لنواف 🏥</MudText>
 
 <MudContainer MaxWidth="MaxWidth.Medium">
@@ -19,14 +20,15 @@
         <HeaderContent>
             <MudTh>الطبيب</MudTh>
             <MudTh>المستشفى</MudTh>
-            <MudTh>التاريخ</MudTh>
+            <MudTh>التاريخ والوقت</MudTh>
             <MudTh>ملاحظات</MudTh>
-            <MudTh></MudTh> @* عمود جديد *@
+            <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="الطبيب">@context.DoctorName</MudTd>
             <MudTd DataLabel="المستشفى">@context.HospitalName</MudTd>
-            <MudTd DataLabel="التاريخ">@context.Date?.ToString("yyyy-MM-dd")</MudTd>
+            @* تحسين طريقة عرض التاريخ ليظهر الوقت معه في الجدول *@
+            <MudTd DataLabel="التاريخ والوقت">@context.Date?.ToString("yyyy-MM-dd hh:mm tt")</MudTd>
             <MudTd DataLabel="ملاحظات">@context.Note</MudTd>
             <MudTd DataLabel="إجراءات">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"
@@ -37,40 +39,53 @@
         </RowTemplate>
     </MudTable>
 </MudContainer>
-
-@* تصحيح الـ Dialog هنا *@
 <MudDialog @bind-Visible="isDialogVisible" Options="dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6">إضافة موعد جديد</MudText>
+        <TitleContent>
+        <MudText Typo="Typo.h6">@(string.IsNullOrEmpty(newAppointment.Id) ? "إضافة موعد جديد" : "تعديل الموعد")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField T="string" Label="اسم الطبيب" @bind-Value="newAppointment.DoctorName" Variant="Variant.Outlined"
-                      Class="mb-3" />
-        @* قائمة اختيار المستشفى *@
-        <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" Variant="Variant.Outlined"
-                   Class="mb-3">
-            @foreach (var hospital in hospitals)
-            {
-                <MudSelectItem Value="@hospital">@hospital</MudSelectItem>
-            }
-        </MudSelect>
+        <MudForm @ref="form">
 
-        @* هذا الحقل سيظهر فقط إذا تم اختيار "أخرى" *@
-        @if (showOtherHospitalInput)
-        {
-            <MudTextField T="string" Label="اكتب اسم المستشفى هنا" @bind-Value="newAppointment.HospitalName"
-                          Variant="Variant.Outlined" Class="mb-3" Color="Color.Secondary" />
-        }
-        <MudDatePicker Label="اختر التاريخ" @bind-Date="newAppointment.Date" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField T="string" Label="اسم الطبيب" @bind-Value="newAppointment.DoctorName" 
+                          Variant="Variant.Outlined" Class="mb-3"
+                          Required="true" RequiredError="يجب كتابة اسم الطبيب" />
+        
+        <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" 
+                       Variant="Variant.Outlined" Class="mb-3"
+                       Required="true" RequiredError="يرجى اختيار المستشفى">
+                @foreach (var hospital in hospitals)
+                {
+                    <MudSelectItem Value="@hospital">@hospital</MudSelectItem>
+                }
+            </MudSelect>
+
+       @if (showOtherHospitalInput)
+            {
+                <MudTextField T="string" Label="اكتب اسم المستشفى هنا" @bind-Value="newAppointment.HospitalName"
+                              Variant="Variant.Outlined" Class="mb-3"
+                              Required="true" RequiredError="يرجى كتابة اسم المستشفى" />
+            }
+
+ <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="التاريخ" @bind-Date="newAppointment.Date" 
+                                   Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTimePicker Label="الوقت" @bind-Time="newAppointment.Time" 
+                                   Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+            </MudGrid>
+
         <MudTextField T="string" Label="ملاحظات" @bind-Value="newAppointment.Note" Variant="Variant.Outlined"
-                      Lines="3" />
+                      Lines="3" Class="mt-3" />
+                      </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" Variant="Variant.Text">إلغاء</MudButton>
         <MudButton Color="Color.Primary" OnClick="SaveAppointment" Variant="Variant.Filled">حفظ الموعد</MudButton>
     </DialogActions>
 </MudDialog>
-
 
 @code {
     private List<string> hospitals = new List<string> { "مستشفى صحار", "مستشفى السلطاني", "المركز الصحي صحار", "أخرى" };
@@ -79,22 +94,27 @@
 
     private bool isDialogVisible;
     private string searchString = "";
-    private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+   private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
 
     private List<Appointment> appointments = new List<Appointment>();
     private Appointment newAppointment = new Appointment();
+        private MudForm form;
+
 
     public class Appointment
     {
-        
-        public string? Id { get; set; } // أضف هذا السطر لتمييز كل موعد
+        public string? Id { get; set; } 
         public string? DoctorName { get; set; }
         public string? HospitalName { get; set; }
         public DateTime? Date { get; set; }
+        
+        // قمنا بإلغاء المتغير المعقد هنا والاعتماد على دمجهم في حقل التاريخ لتجنب مشاكل الجافا سكريبت
+        [System.Text.Json.Serialization.JsonIgnore]
+        public TimeSpan? Time { get; set; }
+        
         public string? Note { get; set; }
     }
 
-    // دالة لجلب البيانات من Firebase عند فتح الصفحة أول مرة
     protected override async Task OnInitializedAsync()
     {
         await LoadAppointments();
@@ -104,11 +124,20 @@
     {
         try
         {
-            // استخدمنا js الصغيرة هنا
+            // جلب المواعيد كـ كائن ديناميكي مرن أولاً لتفادي انهيار المتصفح
             var result = await js.InvokeAsync<List<Appointment>>("loadFromFirebase");
             if (result != null)
             {
                 appointments = result;
+                
+                // استرجاع الوقت للمكونات بناءً على التاريخ المحفوظ
+                foreach(var app in appointments)
+                {
+                    if(app.Date.HasValue)
+                    {
+                        app.Time = app.Date.Value.TimeOfDay;
+                    }
+                }
                 StateHasChanged();
             }
         }
@@ -120,19 +149,37 @@
 
     private void OpenAddDialog()
     {
-        newAppointment = new Appointment { Date = DateTime.Now };
+        newAppointment = new Appointment();
+        newAppointment.Date = DateTime.Today; 
+        newAppointment.Time = DateTime.Now.TimeOfDay;
+
         selectedHospital = null;
         isDialogVisible = true;
     }
 
     private async Task SaveAppointment()
     {
+
+        // أولاً: نطلب من الـ Form التأكد من أن كل الحقول المطلوبة معبأة
+    await form.Validate();
+
+    // إذا كان الـ Form غير صالح (فيه حقول ناقصة)، نوقف العملية فوراً
+    if (!form.IsValid)
+    {
+        return; 
+    }
+    
         if (selectedHospital != "أخرى" && !string.IsNullOrEmpty(selectedHospital))
         {
             newAppointment.HospitalName = selectedHospital;
         }
 
-        // استخدمنا js الصغيرة هنا أيضاً
+        if (newAppointment.Date.HasValue && newAppointment.Time.HasValue)
+        {
+            // دمج التاريخ والوقت في حقل واحد قبل الإرسال لـ Firebase لضمان الأمان البنيوي للبيانات
+            newAppointment.Date = newAppointment.Date.Value.Date + newAppointment.Time.Value;
+        }
+
         await js.InvokeVoidAsync("saveToFirebase", newAppointment);
 
         isDialogVisible = false;
@@ -151,28 +198,27 @@
         return false;
     }
 
-    // دالة لتحضير البيانات للتعديل
-private void PrepareEdit(Appointment appointment)
-{
-    newAppointment = new Appointment 
-    { 
-        Id = appointment.Id,
-        DoctorName = appointment.DoctorName,
-        HospitalName = appointment.HospitalName,
-        Date = appointment.Date,
-        Note = appointment.Note 
-    };
-    selectedHospital = hospitals.Contains(appointment.HospitalName ?? "") ? appointment.HospitalName : "أخرى";
-    isDialogVisible = true;
-}
+    private void PrepareEdit(Appointment appointment)
+    {
+        newAppointment = new Appointment
+        {
+            Id = appointment.Id,
+            DoctorName = appointment.DoctorName,
+            HospitalName = appointment.HospitalName,
+            Date = appointment.Date,
+            Time = appointment.Date?.TimeOfDay, // تعبئة الوقت في نافذة التعديل
+            Note = appointment.Note
+        };
+        selectedHospital = hospitals.Contains(appointment.HospitalName ?? "") ? appointment.HospitalName : "أخرى";
+        isDialogVisible = true;
+    }
 
-// دالة الحذف
-private async Task DeleteAppointment(string? id)
-{
-    if (string.IsNullOrEmpty(id)) return;
-    
-    // استدعاء دالة حذف سنضيفها في الـ JavaScript
-    await js.InvokeVoidAsync("deleteFromFirebase", id);
-    await LoadAppointments(); // تحديث الجدول
-}
+    private async Task DeleteAppointment(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+
+        await js.InvokeVoidAsync("deleteFromFirebase", id);
+        await LoadAppointments(); 
+    }
+
 }
