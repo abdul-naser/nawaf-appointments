@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "NawafAppointment",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-aOpvjhZw9b4omURPw6KJH+GKJmQtX4HPJpdVNImNaQ0=",
+    "hash": "sha256-tY+wi2ZyRvL1B1MxAfceRILJeImwuXCaEP1esLkqBiw=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.mx9wzm9o5h.js"
@@ -1434,16 +1434,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "NawafAppointment.wasm",
-        "name": "NawafAppointment.8nfb8hoicp.wasm",
-        "integrity": "sha256-9A90XpFGEwMxPMmjuDecXSZpEFwmPM+/UYOlTQPmHbY=",
+        "name": "NawafAppointment.z6plysxpal.wasm",
+        "integrity": "sha256-NeuLRhi2kduKQfjhlQDLo6/ycKWnQVJsiro3TwxsiZU=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "NawafAppointment.pdb",
-        "name": "NawafAppointment.fvboomr1ew.pdb",
-        "integrity": "sha256-5Y3akN2pthn0ZN+yLvMoAm5VhQjV0maOUf/nNM45l/c=",
+        "name": "NawafAppointment.4lc3pklcjs.pdb",
+        "integrity": "sha256-eDvSmeXhPQAk0IsIF5dFPTQEjbsMCaP9PHlKVCGOdT0=",
         "cache": "force-cache"
       }
     ],

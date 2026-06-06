@@ -63,26 +63,31 @@
     };
 
     // دالة الجلب الصحيحة (تم حذف التكرار وضمان دمج الـ ID مع البيانات)
-    window.loadFromFirebase = async () => {
+window.loadFromFirebase = async () => {
     const snapshot = await db.ref('appointments').once('value');
     const data = snapshot.val();
     if (!data) return [];
-    
-    // 1. تحويل البيانات من Object إلى مصفوفة (List) مع حقن الـ ID
-    const appointmentsList = Object.keys(data).map(key => ({
-        ...data[key],
-        id: key
-    }));
 
-    // 2. ترتيب المواعيد تصاعدياً (من الأقرب مستقبلاً إلى الأبعد) بناءً على حقل date
-    return appointmentsList.sort((a, b) => {
-        // إذا لم يكن هناك تاريخ لأي سبب، نضعه في النهاية
-        if (!a.date) return 1;
-        if (!b.date) return -1;
-        
-        // تحويل النصوص إلى كائنات تاريخ ومقارنتها
-        return new Date(a.date) - new Date(b.date);
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // تجاهل الوقت
+
+    const appointmentsList = Object.keys(data)
+        .map(key => ({
+            ...data[key],
+            id: key
+        }))
+        .filter(item => {
+            if (!item.date) return false;
+
+            const appointmentDate = new Date(item.date);
+            appointmentDate.setHours(0, 0, 0, 0);
+
+            return appointmentDate >= today;
+        });
+
+    return appointmentsList.sort((a, b) =>
+        new Date(a.date) - new Date(b.date)
+    );
 };
 </script>
 
