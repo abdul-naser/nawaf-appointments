@@ -11,19 +11,32 @@
         إضافة موعد جديد +
     </MudButton>
 
-    <MudTable Items="@appointments" Filter="new Func<Appointment, bool>(FilterFunc)">
+    <MudTable Items="@appointments" Class="p-2" Filter="new Func<Appointment, bool>(FilterFunc)">
         <ToolBarContent>
             <MudText Typo="Typo.h6">قائمة المواعيد</MudText>
             <MudSpacer />
-            <MudTextField @bind-Value="searchString" Placeholder="بحث..." Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+
+       <div class="d-flex gap-4">
+    <MudTextField @bind-Value="searchString" Placeholder="بحث..." Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+
+<MudSelect T="int?" Clearable="true" @bind-Value="selectedMonth">
+    <MudSelectItem T="int?" Value="((int?)null)">كل الشهور</MudSelectItem>
+    @for (int month = 1; month <= 12; month++)
+    {
+        int currentMonth = month;
+        <MudSelectItem T="int?" Value="currentMonth">شهر @currentMonth</MudSelectItem>
+    }
+    </MudSelect>
+
+</div>
         </ToolBarContent>
-        <HeaderContent>
-            <MudTh>الطبيب</MudTh>
-            <MudTh>المستشفى</MudTh>
-            <MudTh>التاريخ والوقت</MudTh>
-            <MudTh>ملاحظات</MudTh>
-            <MudTh></MudTh>
+        <HeaderContent >
+            <MudTh Class="fs-6 fw-bold">العيادة / الطبيب</MudTh>
+            <MudTh Class="fs-6 fw-bold">المستشفى</MudTh>
+            <MudTh Class="fs-6 fw-bold">التاريخ والوقت</MudTh>
+            <MudTh Class="fs-6 fw-bold">ملاحظات</MudTh>
+            <MudTh Class="fs-6 fw-bold"></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="الطبيب">@context.DoctorName</MudTd>
@@ -95,6 +108,7 @@
 
     private bool isDialogVisible;
     private string searchString = "";
+    private int? selectedMonth = null;
    private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
 
     private List<Appointment> appointments = new List<Appointment>();
@@ -213,6 +227,14 @@
 
     private bool FilterFunc(Appointment element)
     {
+
+        if (selectedMonth.HasValue && element.Date.HasValue)
+        {
+            if (element.Date.Value.Month != selectedMonth.Value)
+            {
+                return false; // إذا كان الشهر لا يطابق، لا نعرض هذا العنصر
+            }
+        }
         if (string.IsNullOrWhiteSpace(searchString)) return true;
         if (element.DoctorName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) return true;
         if (element.HospitalName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) return true;
