@@ -37,7 +37,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
     // بيانات الربط (Config)
-    const firebaseConfig = {
+    const firebaseConfig = { 
         databaseURL: "https://nawafappointments-default-rtdb.firebaseio.com/"
     };
     
@@ -63,7 +63,7 @@
     };
 
     // دالة الجلب الصحيحة (تم حذف التكرار وضمان دمج الـ ID مع البيانات)
-window.loadFromFirebase = async () => {
+window.loadFromFirebase = async () => { 
     const snapshot = await db.ref('appointments').once('value');
     const data = snapshot.val();
     if (!data) return [];
@@ -84,6 +84,7 @@ window.loadFromFirebase = async () => {
 
             return appointmentDate >= today;
         });
+       
 
     return appointmentsList.sort((a, b) =>
         new Date(a.date) - new Date(b.date)

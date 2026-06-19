@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NawafAppointment")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80b188087f01adb0bc96cb9c5d3304e1837876e8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+603db7da343c668a27a2a4e2f55835dc33f5eb90")]
 [assembly: System.Reflection.AssemblyProductAttribute("NawafAppointment")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NawafAppointment")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

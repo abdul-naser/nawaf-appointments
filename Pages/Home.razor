@@ -35,6 +35,7 @@
             <MudTh Class="fs-6 fw-bold">العيادة / الطبيب</MudTh>
             <MudTh Class="fs-6 fw-bold">المستشفى</MudTh>
             <MudTh Class="fs-6 fw-bold">التاريخ والوقت</MudTh>
+            <MudTh Class="fs-6 fw-bold">اليوم</MudTh>
             <MudTh Class="fs-6 fw-bold">ملاحظات</MudTh>
             <MudTh Class="fs-6 fw-bold"></MudTh>
         </HeaderContent>
@@ -43,6 +44,7 @@
             <MudTd DataLabel="المستشفى">@context.HospitalName</MudTd>
             @* تحسين طريقة عرض التاريخ ليظهر الوقت معه في الجدول *@
             <MudTd DataLabel="التاريخ والوقت">@context.Date?.ToString("yyyy-MM-dd hh:mm tt")</MudTd>
+            <MudTd DataLabel="اليوم">@GetArabicDayName(context.Date)</MudTd>
             <MudTd DataLabel="ملاحظات">@context.Note</MudTd>
             <MudTd DataLabel="إجراءات">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"
@@ -154,7 +156,7 @@
                     }
                 }
                 StateHasChanged();
-            }
+            } 
         }
         catch (Exception ex)
         {
@@ -264,4 +266,20 @@
         await LoadAppointments(); 
     }
 
+    private string GetArabicDayName(DateTime? date)
+    {
+        if (!date.HasValue) return "";
+        
+        return date.Value.DayOfWeek switch
+        {
+            DayOfWeek.Saturday => "السبت",
+            DayOfWeek.Sunday => "الأحد",
+            DayOfWeek.Monday => "الاثنين",
+            DayOfWeek.Tuesday => "الثلاثاء",
+            DayOfWeek.Wednesday => "الأربعاء",
+            DayOfWeek.Thursday => "الخميس",
+            DayOfWeek.Friday => "الجمعة",
+            _ => ""
+        };
+    }
 }
