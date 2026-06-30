@@ -3,99 +3,150 @@
 @inject IJSRuntime js
 @inject ISnackbar Snackbar
 
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    <MudPaper Elevation="0" Class="hero-card">
+        <div class="hero-header">
+            <div class="d-flex align-center gap-3 mb-2">
+                <MudAvatar Size="Size.Large" Class="hero-avatar">
+                    <span class="hero-emoji">🩺</span>
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h4" Class="fw-bold mb-1 hero-title"> مواعيد نواف</MudText>
+                </div>
+            </div>
 
-<MudText Typo="Typo.h4" GutterBottom="true" Align="Align.Center" Class="mt-4">مواعيد المستشفى - لنواف 🏥</MudText>
+            <MudStack Row="true" Spacing="2" Class="flex-wrap hero-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AddCircleOutline" OnClick="OpenAddDialog" Class="action-btn">
+                    إضافة موعد جديد
+                </MudButton>
+            </MudStack>
+        </div>
+    </MudPaper>
 
-<MudContainer MaxWidth="MaxWidth.Medium">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" Class="my-4">
-        إضافة موعد جديد +
-    </MudButton>
+    <MudGrid Spacing="2" Class="mt-4">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="stat-card stat-blue">
+                <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Class="fw-bold mt-2">@appointments.Count</MudText>
+                <MudText Typo="Typo.body2">إجمالي المواعيد</MudText>
+            </MudPaper>
+        </MudItem>
 
-    <MudTable Items="@appointments" Class="p-2" Filter="new Func<Appointment, bool>(FilterFunc)">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">قائمة المواعيد</MudText>
-            <MudSpacer />
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="stat-card stat-green">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Class="fw-bold mt-2">@GetMonthAppointmentsCount()</MudText>
+                <MudText Typo="Typo.body2">مواعيد هذا الشهر</MudText>
+            </MudPaper>
+        </MudItem>
 
-       <div class="d-flex gap-4">
-    <MudTextField @bind-Value="searchString" Placeholder="بحث..." Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="stat-card stat-purple">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Class="fw-bold mt-2">@GetFilteredCount()</MudText>
+                <MudText Typo="Typo.body2">نتائج البحث الحالية</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-<MudSelect T="int?" Clearable="true" @bind-Value="selectedMonth">
-    <MudSelectItem T="int?" Value="((int?)null)">كل الشهور</MudSelectItem>
-    @for (int month = 1; month <= 12; month++)
-    {
-        int currentMonth = month;
-        <MudSelectItem T="int?" Value="currentMonth">شهر @currentMonth</MudSelectItem>
-    }
-    </MudSelect>
+    <MudPaper Elevation="2" Class="page-card mt-4">
+        <MudTable Items="@appointments" Class="glass-table" Filter="new Func<Appointment, bool>(FilterFunc)"
+                  Dense="true" Hover="true" Striped="true">
+            <ToolBarContent>
+                <div class="d-flex flex-column flex-grow-1 gap-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6">قائمة المواعيد</MudText>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="text-muted">ابحث عن طبيب أو مستشفى أو شهر معين</MudText>
+                </div>
+                <MudSpacer />
 
-</div>
-        </ToolBarContent>
-        <HeaderContent >
-            <MudTh Class="fs-6 fw-bold">العيادة / الطبيب</MudTh>
-            <MudTh Class="fs-6 fw-bold">المستشفى</MudTh>
-            <MudTh Class="fs-6 fw-bold">التاريخ والوقت</MudTh>
-            <MudTh Class="fs-6 fw-bold">اليوم</MudTh>
-            <MudTh Class="fs-6 fw-bold">ملاحظات</MudTh>
-            <MudTh Class="fs-6 fw-bold"></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="الطبيب">@context.DoctorName</MudTd>
-            <MudTd DataLabel="المستشفى">@context.HospitalName</MudTd>
-            @* تحسين طريقة عرض التاريخ ليظهر الوقت معه في الجدول *@
-            <MudTd DataLabel="التاريخ والوقت">@context.Date?.ToString("yyyy-MM-dd hh:mm tt")</MudTd>
-            <MudTd DataLabel="اليوم">@GetArabicDayName(context.Date)</MudTd>
-            <MudTd DataLabel="ملاحظات">@context.Note</MudTd>
-            <MudTd DataLabel="إجراءات">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"
-                               OnClick="@(() => PrepareEdit(context))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                               OnClick="@(() => DeleteAppointment(context.Id))" />
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+                <div class="table-toolbar">
+                    <MudTextField @bind-Value="searchString" Placeholder="بحث..." Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" />
+
+                    <MudSelect T="int?" Clearable="true" @bind-Value="selectedMonth" Label="الشهر"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="int?" Value="((int?)null)">كل الشهور</MudSelectItem>
+                        @for (int month = 1; month <= 12; month++)
+                        {
+                            int currentMonth = month;
+                            <MudSelectItem T="int?" Value="currentMonth">شهر @currentMonth</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh Class="fs-6 fw-bold">العيادة / الطبيب</MudTh>
+                <MudTh Class="fs-6 fw-bold">المستشفى</MudTh>
+                <MudTh Class="fs-6 fw-bold">التاريخ والوقت</MudTh>
+                <MudTh Class="fs-6 fw-bold">اليوم</MudTh>
+                <MudTh Class="fs-6 fw-bold">ملاحظات</MudTh>
+                <MudTh Class="fs-6 fw-bold"></MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="الطبيب">
+                    <span>@context.DoctorName</span>
+                </MudTd>
+                <MudTd DataLabel="المستشفى">
+                    <span>@context.HospitalName</span>
+                </MudTd>
+                <MudTd DataLabel="التاريخ والوقت">@context.Date?.ToString("yyyy-MM-dd hh:mm tt")</MudTd>
+                <MudTd DataLabel="اليوم">@GetArabicDayName(context.Date)</MudTd>
+                <MudTd DataLabel="ملاحظات">@context.Note</MudTd>
+                <MudTd DataLabel="إجراءات">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"
+                                   OnClick="@(() => PrepareEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   OnClick="@(() => DeleteAppointment(context.Id))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
 </MudContainer>
+
 <MudDialog @bind-Visible="isDialogVisible" Options="dialogOptions">
-        <TitleContent>
-        <MudText Typo="Typo.h6">@(string.IsNullOrEmpty(newAppointment.Id) ? "إضافة موعد جديد" : "تعديل الموعد")</MudText>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(string.IsNullOrEmpty(newAppointment.Id) ? "إضافة موعد جديد" : "تعديل الموعد")
+        </MudText>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form">
+            <MudTextField T="string" Label="اسم الطبيب" @bind-Value="newAppointment.DoctorName"
+                          Variant="Variant.Outlined" Class="mb-3" Required="true" RequiredError="يجب كتابة اسم الطبيب" />
 
-        <MudTextField T="string" Label="اسم الطبيب" @bind-Value="newAppointment.DoctorName" 
-                          Variant="Variant.Outlined" Class="mb-3"
-                          Required="true" RequiredError="يجب كتابة اسم الطبيب" />
-        
-        <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" 
-                       Variant="Variant.Outlined" Class="mb-3"
-                       Required="true" RequiredError="يرجى اختيار المستشفى">
+            <MudSelect T="string" Label="اختر المستشفى" @bind-Value="selectedHospital" Variant="Variant.Outlined"
+                       Class="mb-3" Required="true" RequiredError="يرجى اختيار المستشفى">
                 @foreach (var hospital in hospitals)
                 {
                     <MudSelectItem Value="@hospital">@hospital</MudSelectItem>
                 }
             </MudSelect>
 
-       @if (showOtherHospitalInput)
+            @if (showOtherHospitalInput)
             {
                 <MudTextField T="string" Label="اكتب اسم المستشفى هنا" @bind-Value="newAppointment.HospitalName"
-                              Variant="Variant.Outlined" Class="mb-3"
-                              Required="true" RequiredError="يرجى كتابة اسم المستشفى" />
+                              Variant="Variant.Outlined" Class="mb-3" Required="true" RequiredError="يرجى كتابة اسم المستشفى" />
             }
 
- <MudGrid>
+            <MudGrid>
                 <MudItem xs="12" sm="6">
-                    <MudDatePicker Label="التاريخ" @bind-Date="newAppointment.Date" 
-                                   Variant="Variant.Outlined" Required="true" />
+                    <MudDatePicker Label="التاريخ" @bind-Date="newAppointment.Date" Variant="Variant.Outlined"
+                                   Required="true" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker Label="الوقت" @bind-Time="newAppointment.Time" 
-                                   Variant="Variant.Outlined" Required="true" />
+                    <MudTimePicker Label="الوقت" @bind-Time="newAppointment.Time" Variant="Variant.Outlined"
+                                   Required="true" />
                 </MudItem>
             </MudGrid>
 
-        <MudTextField T="string" Label="ملاحظات ان وجدت" @bind-Value="newAppointment.Note" Variant="Variant.Outlined"
-                      Lines="3" Class="mt-3" />
-                      </MudForm>
+            <MudTextField T="string" Label="ملاحظات ان وجدت" @bind-Value="newAppointment.Note"
+                          Variant="Variant.Outlined" Lines="3" Class="mt-3" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" Variant="Variant.Text">إلغاء</MudButton>
@@ -111,24 +162,22 @@
     private bool isDialogVisible;
     private string searchString = "";
     private int? selectedMonth = null;
-   private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+    private DialogOptions dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
 
     private List<Appointment> appointments = new List<Appointment>();
     private Appointment newAppointment = new Appointment();
-        private MudForm form;
-
+    private MudForm? form;
 
     public class Appointment
     {
-        public string? Id { get; set; } 
+        public string? Id { get; set; }
         public string? DoctorName { get; set; }
         public string? HospitalName { get; set; }
         public DateTime? Date { get; set; }
-        
-        // قمنا بإلغاء المتغير المعقد هنا والاعتماد على دمجهم في حقل التاريخ لتجنب مشاكل الجافا سكريبت
+
         [System.Text.Json.Serialization.JsonIgnore]
         public TimeSpan? Time { get; set; }
-        
+
         public string? Note { get; set; }
     }
 
@@ -141,22 +190,20 @@
     {
         try
         {
-            // جلب المواعيد كـ كائن ديناميكي مرن أولاً لتفادي انهيار المتصفح
             var result = await js.InvokeAsync<List<Appointment>>("loadFromFirebase");
             if (result != null)
             {
                 appointments = result;
-                
-                // استرجاع الوقت للمكونات بناءً على التاريخ المحفوظ
-                foreach(var app in appointments)
+
+                foreach (var app in appointments)
                 {
-                    if(app.Date.HasValue)
+                    if (app.Date.HasValue)
                     {
                         app.Time = app.Date.Value.TimeOfDay;
                     }
                 }
                 StateHasChanged();
-            } 
+            }
         }
         catch (Exception ex)
         {
@@ -167,7 +214,7 @@
     private void OpenAddDialog()
     {
         newAppointment = new Appointment();
-        newAppointment.Date = DateTime.Today; 
+        newAppointment.Date = DateTime.Today;
         newAppointment.Time = DateTime.Now.TimeOfDay;
 
         selectedHospital = null;
@@ -176,16 +223,18 @@
 
     private async Task SaveAppointment()
     {
+        if (form is null)
+        {
+            return;
+        }
 
-        // أولاً: نطلب من الـ Form التأكد من أن كل الحقول المطلوبة معبأة
-    await form.ValidateAsync();
+        await form.ValidateAsync();
 
-    // إذا كان الـ Form غير صالح (فيه حقول ناقصة)، نوقف العملية فوراً
-    if (!form.IsValid)
-    {
-        return; 
-    }
-    
+        if (!form.IsValid)
+        {
+            return;
+        }
+
         if (selectedHospital != "أخرى" && !string.IsNullOrEmpty(selectedHospital))
         {
             newAppointment.HospitalName = selectedHospital;
@@ -193,27 +242,21 @@
 
         if (newAppointment.Date.HasValue && newAppointment.Time.HasValue)
         {
-            // دمج التاريخ والوقت في حقل واحد قبل الإرسال لـ Firebase لضمان الأمان البنيوي للبيانات
             newAppointment.Date = newAppointment.Date.Value.Date + newAppointment.Time.Value;
         }
 
-    // ================= [ الشرط الجديد هنا ] =================
-    if (newAppointment.Date.HasValue)
-    {
-        // الفحص: نبحث في القائمة عن موعد له نفس التاريخ والوقت تماماً، 
-        // وتأكدنا أن الـ Id مختلف لكي لا يظهر التنبيه بالخطأ أثناء عملية "التعديل"
-        bool isConflict = appointments.Any(app => 
-            app.Date == newAppointment.Date && 
-            app.Id != newAppointment.Id);
-
-        if (isConflict)
+        if (newAppointment.Date.HasValue)
         {
-            // إظهار تنبيه أحمر يختفي بعد ثوانٍ يمنع الحفظ
-            Snackbar.Add("تنبيه: يوجد موعد آخر مسجل في نفس هذا اليوم والوقت!", Severity.Warning);
-            return; // إيقاف الدالة فوراً ومنع الرفع إلى Firebase
+            bool isConflict = appointments.Any(app =>
+                app.Date == newAppointment.Date &&
+                app.Id != newAppointment.Id);
+
+            if (isConflict)
+            {
+                Snackbar.Add("تنبيه: يوجد موعد آخر مسجل في نفس هذا اليوم والوقت!", Severity.Warning);
+                return;
+            }
         }
-    }
-    // =======================================================
 
         await js.InvokeVoidAsync("saveToFirebase", newAppointment);
 
@@ -229,14 +272,14 @@
 
     private bool FilterFunc(Appointment element)
     {
-
         if (selectedMonth.HasValue && element.Date.HasValue)
         {
             if (element.Date.Value.Month != selectedMonth.Value)
             {
-                return false; // إذا كان الشهر لا يطابق، لا نعرض هذا العنصر
+                return false;
             }
         }
+
         if (string.IsNullOrWhiteSpace(searchString)) return true;
         if (element.DoctorName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) return true;
         if (element.HospitalName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false) return true;
@@ -251,7 +294,7 @@
             DoctorName = appointment.DoctorName,
             HospitalName = appointment.HospitalName,
             Date = appointment.Date,
-            Time = appointment.Date?.TimeOfDay, // تعبئة الوقت في نافذة التعديل
+            Time = appointment.Date?.TimeOfDay,
             Note = appointment.Note
         };
         selectedHospital = hospitals.Contains(appointment.HospitalName ?? "") ? appointment.HospitalName : "أخرى";
@@ -263,13 +306,13 @@
         if (string.IsNullOrEmpty(id)) return;
 
         await js.InvokeVoidAsync("deleteFromFirebase", id);
-        await LoadAppointments(); 
+        await LoadAppointments();
     }
 
     private string GetArabicDayName(DateTime? date)
     {
         if (!date.HasValue) return "";
-        
+
         return date.Value.DayOfWeek switch
         {
             DayOfWeek.Saturday => "السبت",
@@ -281,5 +324,26 @@
             DayOfWeek.Friday => "الجمعة",
             _ => ""
         };
+    }
+
+    private int GetMonthAppointmentsCount()
+    {
+        var currentMonth = DateTime.Now.Month;
+        return appointments.Count(app => app.Date?.Month == currentMonth);
+    }
+
+    private int GetFilteredCount()
+    {
+        if (string.IsNullOrWhiteSpace(searchString) && !selectedMonth.HasValue)
+        {
+            return appointments.Count;
+        }
+
+        return appointments.Count(app => FilterFunc(app));
+    }
+
+    private string GetCurrentMonthName()
+    {
+        return DateTime.Now.ToString("MMMM", new System.Globalization.CultureInfo("ar"));
     }
 }

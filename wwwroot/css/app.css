@@ -1,22 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
 html,
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    /* يمكنك تغيير الألوان هنا: اللون الأول ثم اللون الثاني */
-background: linear-gradient(180deg, rgba(239, 246, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+    background:
+        radial-gradient(circle at top left, rgba(31, 155, 112, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(47, 127, 226, 0.16), transparent 24%),
+        linear-gradient(135deg, #f6fbf3 0%, #eef7ff 45%, #fcfef9 100%);
     background-attachment: fixed;
-    /* لجعل الخلفية ثابتة عند التمرير */
     min-height: 100vh;
     margin: 0;
+    color: #16324f;
 }
 
-/* لجعل محتوى التطبيق شفافاً قليلاً ليظهر التدرج خلفه */
 .mud-layout {
     background: transparent !important;
 }
 
+.hero-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffffff 0%, #f4fcf8 100%);
+    border: 1px solid #dceee3;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 14px 35px rgba(22, 50, 79, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.hero-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(31, 155, 112, 0.08), transparent 60%);
+    pointer-events: none;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-actions {
+    justify-content: flex-end;
+}
+
+.hero-avatar {
+    background: linear-gradient(135deg, #1f9b70, #46c7c2);
+    color: white;
+    box-shadow: 0 10px 24px rgba(31, 155, 112, 0.24);
+}
+
+.hero-emoji {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.hero-title {
+    color: #134b64;
+    letter-spacing: 0.2px;
+}
+
+.hero-subtitle {
+    color: #5d776d;
+}
+
+.page-card {
+    border-radius: 22px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #ebf2ea;
+    box-shadow: 0 12px 28px rgba(22, 50, 79, 0.07);
+}
+
+.stat-card {
+    border-radius: 18px;
+    padding: 14px;
+    color: white;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(22, 50, 79, 0.07);
+}
+
+.stat-blue {
+    background: linear-gradient(180deg, #3a7be1 0%, #4f8be8 100%);
+}
+
+.stat-green {
+    background: linear-gradient(180deg, #25906f 0%, #35ab86 100%);
+}
+
+.stat-purple {
+    background: linear-gradient(180deg, #6b56c7 0%, #7e6edf 100%);
+}
+
+.table-toolbar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.glass-table .mud-table-container {
+    border: 1px solid #e9f0ea;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.glass-table .mud-table-head .mud-table-cell {
+    background: #f4faf6;
+    color: #21495f;
+    font-weight: 700;
+}
+
+.glass-table .mud-table-row:hover {
+    background: #f8fcf9;
+}
+
+.mud-icon-button-root {
+    border-radius: 999px !important;
+}
+
+.action-btn {
+    border-radius: 999px;
+    padding: 0 18px;
+    background: linear-gradient(135deg, #1f9b70, #2fb56c) !important;
+    color: white !important;
+    box-shadow: 0 10px 20px rgba(31, 155, 112, 0.2);
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.mud-chip-root {
+    border-radius: 999px;
+    font-weight: 700;
+}
 
 h1:focus {
     outline: none;
