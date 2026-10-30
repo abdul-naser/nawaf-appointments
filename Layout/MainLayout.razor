@@ -1,17 +1,181 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-@* هذه الأسطر الثلاثة هي المسؤولة عن تشغيل القوائم والتقويم والرسائل *@
-<MudThemeProvider />
+@using NawafAppointment.Services
+
+@using NawafAppointment.Components
+
+@using MudBlazor
+
+@inject AppSettingsService SettingsService
+@inject NavigationManager Nav
+
+@implements IDisposable
+
+
+
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
+
 <MudPopoverProvider />
+
 <MudDialogProvider />
+
 <MudSnackbarProvider />
 
 
 
-<MudLayout>
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-            @Body
-        </MudContainer>
+<MudLayout Class="app-layout">
+
+    <MudMainContent Class="main-content">
+
+        <UnifiedHeader />
+
+        <ReminderHost />
+
+        <ErrorBoundary>
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent>
+                <div class="page-error">
+                    <p>حدث خطأ أثناء عرض الصفحة</p>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ReloadPage">إعادة تحميل</MudButton>
+                </div>
+            </ErrorContent>
+        </ErrorBoundary>
+
+        <div class="bottom-nav-spacer"></div>
+
     </MudMainContent>
+
+
+
+    <nav class="bottom-nav">
+
+        <NavLink href="/" Match="NavLinkMatch.All" class="bottom-nav-item">
+
+            <i class="bi bi-list-ul"></i>
+
+            <span>المواعيد</span>
+
+        </NavLink>
+
+        <NavLink href="/calendar" class="bottom-nav-item">
+
+            <i class="bi bi-calendar3"></i>
+
+            <span>التقويم</span>
+
+        </NavLink>
+
+        <NavLink href="/settings" class="bottom-nav-item">
+
+            <i class="bi bi-gear"></i>
+
+            <span>الإعدادات</span>
+
+        </NavLink>
+
+    </nav>
+
 </MudLayout>
+
+
+
+@code {
+
+    private bool _isDarkMode;
+
+    private MudTheme _theme = CreateTheme();
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        SettingsService.OnChange += OnSettingsChanged;
+
+        await SettingsService.LoadAsync();
+
+        _isDarkMode = SettingsService.Settings.DarkMode;
+
+    }
+
+
+
+    private void OnSettingsChanged()
+
+    {
+
+        _isDarkMode = SettingsService.Settings.DarkMode;
+
+        InvokeAsync(StateHasChanged);
+
+    }
+
+
+
+    private static MudTheme CreateTheme() => new()
+
+    {
+
+        PaletteLight = new PaletteLight
+
+        {
+
+            Primary = "#1f9b70",
+
+            Secondary = "#2f7fe2",
+
+            AppbarBackground = "#ffffff",
+
+            Background = "#f6fbf3",
+
+            Surface = "#ffffff",
+
+            TextPrimary = "#16324f",
+
+            TextSecondary = "#5d776d"
+
+        },
+
+        PaletteDark = new PaletteDark
+
+        {
+
+            Primary = "#2fb56c",
+
+            Secondary = "#5a9cf5",
+
+            AppbarBackground = "#0f1a24",
+
+            Background = "#0a1219",
+
+            Surface = "#142029",
+
+            TextPrimary = "#e8f0f5",
+
+            TextSecondary = "#8ba3b5"
+
+        },
+
+        Typography = new Typography
+
+        {
+
+            Default = new DefaultTypography { FontFamily = ["Cairo", "Segoe UI", "sans-serif"] }
+
+        },
+
+        LayoutProperties = new LayoutProperties { DefaultBorderRadius = "16px" }
+
+    };
+
+
+
+    public void Dispose() => SettingsService.OnChange -= OnSettingsChanged;
+
+    private void ReloadPage() => Nav.NavigateTo(Nav.Uri, forceLoad: true);
+}
+
+

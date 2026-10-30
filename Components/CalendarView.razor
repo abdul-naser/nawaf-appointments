@@ -1,0 +1,173 @@
+@using NawafAppointment.Models
+@using MudBlazor
+
+<MudPaper Elevation="0" Class="calendar-container page-card">
+    <div class="calendar-header">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="PrevPeriod" />
+        <MudText Typo="Typo.h6" Class="calendar-title fw-bold">@GetTitle()</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="NextPeriod" />
+    </div>
+
+    <MudButtonGroup Variant="Variant.Outlined" Class="calendar-view-toggle mb-3" OverrideStyles="false">
+        <MudButton Color="@(ViewMode == CalendarViewMode.Month ? Color.Primary : Color.Default)"
+                   OnClick="() => SetViewMode(CalendarViewMode.Month)">شهري</MudButton>
+        <MudButton Color="@(ViewMode == CalendarViewMode.Week ? Color.Primary : Color.Default)"
+                   OnClick="() => SetViewMode(CalendarViewMode.Week)">أسبوعي</MudButton>
+    </MudButtonGroup>
+
+    @if (ViewMode == CalendarViewMode.Month)
+    {
+        <div class="calendar-grid calendar-month">
+            @foreach (var dayName in ArabicDayNames)
+            {
+                <div class="calendar-day-header">@dayName</div>
+            }
+            @foreach (var cell in MonthCells)
+            {
+                <div class="@GetCellClass(cell)" @onclick="() => OnDayClick(cell)">
+                    <span class="calendar-day-number">@cell.Date.Day</span>
+                    @foreach (var app in GetAppointmentsForDay(cell.Date).Take(2))
+                    {
+                        <div class="calendar-event @GetEventClass(app)" title="@GetEventLabel(app)">
+                            @GetEventLabel(app)
+                        </div>
+                    }
+                    @if (GetAppointmentsForDay(cell.Date).Count() > 2)
+                    {
+                        <div class="calendar-more">+@(GetAppointmentsForDay(cell.Date).Count() - 2)</div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="calendar-week">
+            @foreach (var day in WeekDays)
+            {
+                <div class="@($"calendar-week-col {(day.Date == DateTime.Today ? "today" : "")}")">
+                    <div class="calendar-week-day-header">
+                        <span class="week-day-name">@GetShortDayName(day)</span>
+                        <span class="week-day-num">@day.Day</span>
+                    </div>
+                    <div class="calendar-week-events">
+                        @foreach (var app in GetAppointmentsForDay(day))
+                        {
+                            <div class="calendar-week-event @GetEventClass(app)"
+                                 @onclick="() => OnAppointmentClick.InvokeAsync(app)">
+                                <span class="event-time">@app.Date?.ToString("hh:mm tt")</span>
+                                <span class="event-name">@GetEventLabel(app)</span>
+                                <span class="event-hospital">@app.HospitalName</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public IEnumerable<Appointment> Appointments { get; set; } = [];
+    [Parameter] public EventCallback<Appointment> OnAppointmentClick { get; set; }
+    [Parameter] public EventCallback<DateTime> OnDayClickCallback { get; set; }
+
+    private DateTime _currentDate = DateTime.Today;
+    private CalendarViewMode ViewMode { get; set; } = CalendarViewMode.Month;
+
+    private static readonly string[] ArabicDayNames =
+        ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+
+    private enum CalendarViewMode { Month, Week }
+
+    private IEnumerable<CalendarCell> MonthCells
+    {
+        get
+        {
+            var firstOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
+            var startDay = (int)firstOfMonth.DayOfWeek;
+            var start = firstOfMonth.AddDays(-startDay);
+            for (int i = 0; i < 42; i++)
+                yield return new CalendarCell(start.AddDays(i), start.AddDays(i).Month == _currentDate.Month);
+        }
+    }
+
+    private IEnumerable<DateTime> WeekDays
+    {
+        get
+        {
+            var start = _currentDate.Date.AddDays(-(int)_currentDate.DayOfWeek);
+            for (int i = 0; i < 7; i++)
+                yield return start.AddDays(i);
+        }
+    }
+
+    private string GetTitle()
+    {
+        var culture = new System.Globalization.CultureInfo("ar");
+        return ViewMode == CalendarViewMode.Month
+            ? _currentDate.ToString("MMMM yyyy", culture)
+            : $"أسبوع {WeekDays.First():dd/MM} — {WeekDays.Last():dd/MM}";
+    }
+
+    private IEnumerable<Appointment> GetAppointmentsForDay(DateTime day) =>
+        Appointments.Where(a =>
+            a.Date.HasValue &&
+            a.Date.Value.Date == day.Date &&
+            a.GetStatus() != AppointmentStatus.Cancelled)
+            .OrderBy(a => a.Date);
+
+    private string GetCellClass(CalendarCell cell)
+    {
+        var cls = "calendar-cell";
+        if (!cell.IsCurrentMonth) cls += " other-month";
+        if (cell.Date.Date == DateTime.Today) cls += " today";
+        if (GetAppointmentsForDay(cell.Date).Any()) cls += " has-events";
+        return cls;
+    }
+
+    private static string GetEventLabel(Appointment app)
+    {
+        if (!string.IsNullOrWhiteSpace(app.DoctorName))
+            return app.DoctorName.Trim();
+        if (!string.IsNullOrWhiteSpace(app.Specialty))
+            return app.Specialty.Trim();
+        return app.HospitalName?.Trim() ?? "موعد";
+    }
+
+    private static string GetEventClass(Appointment app) => app.GetStatus() switch
+    {
+        AppointmentStatus.Upcoming => "event-upcoming",
+        AppointmentStatus.Completed => "event-completed",
+        _ => "event-cancelled"
+    };
+
+    private static string GetShortDayName(DateTime day) => day.DayOfWeek switch
+    {
+        DayOfWeek.Saturday => "سب",
+        DayOfWeek.Sunday => "أحد",
+        DayOfWeek.Monday => "اثن",
+        DayOfWeek.Tuesday => "ثل",
+        DayOfWeek.Wednesday => "أرب",
+        DayOfWeek.Thursday => "خم",
+        DayOfWeek.Friday => "جم",
+        _ => ""
+    };
+
+    private void PrevPeriod() =>
+        _currentDate = ViewMode == CalendarViewMode.Month
+            ? _currentDate.AddMonths(-1)
+            : _currentDate.AddDays(-7);
+
+    private void NextPeriod() =>
+        _currentDate = ViewMode == CalendarViewMode.Month
+            ? _currentDate.AddMonths(1)
+            : _currentDate.AddDays(7);
+
+    private void SetViewMode(CalendarViewMode mode) => ViewMode = mode;
+
+    private async Task OnDayClick(CalendarCell cell) =>
+        await OnDayClickCallback.InvokeAsync(cell.Date);
+
+    private record CalendarCell(DateTime Date, bool IsCurrentMonth);
+}

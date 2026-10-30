@@ -1,0 +1,173 @@
+@using NawafAppointment.Models
+@using NawafAppointment.Services
+@using MudBlazor
+@inject AppointmentService AppointmentService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudPaper Elevation="0" Class="page-card mt-4">
+    <div class="filters-bar">
+        <MudTextField @bind-Value="_search" Placeholder="بحث (طبيب، مستشفى، ملاحظات...)"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true" Class="filter-search" Variant="Variant.Outlined" />
+
+        <MudSelect T="AppointmentStatus?" @bind-Value="_statusFilter" Label="الحالة"
+                   Clearable="true" Variant="Variant.Outlined" Class="filter-select">
+            <MudSelectItem T="AppointmentStatus?" Value="AppointmentStatus.Upcoming">قادم</MudSelectItem>
+            <MudSelectItem T="AppointmentStatus?" Value="AppointmentStatus.Completed">منتهي</MudSelectItem>
+            <MudSelectItem T="AppointmentStatus?" Value="AppointmentStatus.Cancelled">ملغي</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="string" @bind-Value="_specialtyFilter" Label="التخصص"
+                   Clearable="true" Variant="Variant.Outlined" Class="filter-select">
+            @foreach (var spec in GetAvailableSpecialties())
+            {
+                <MudSelectItem T="string" Value="@spec">@spec</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="int?" @bind-Value="_monthFilter" Label="الشهر"
+                   Clearable="true" Variant="Variant.Outlined" Class="filter-select">
+            @for (int m = 1; m <= 12; m++)
+            {
+                int month = m;
+                <MudSelectItem T="int?" Value="month">
+                    @System.Globalization.CultureInfo.GetCultureInfo("ar").DateTimeFormat.GetMonthName(month)
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+
+    <MudButtonGroup Variant="Variant.Outlined" Class="view-toggle mt-3" OverrideStyles="false">
+        <MudButton Color="@(_viewMode == "cards" ? Color.Primary : Color.Default)"
+                   StartIcon="@Icons.Material.Filled.GridView"
+                   OnClick='() => _viewMode = "cards"'>كروت</MudButton>
+        <MudButton Color="@(_viewMode == "table" ? Color.Primary : Color.Default)"
+                   StartIcon="@Icons.Material.Filled.TableRows"
+                   OnClick='() => _viewMode = "table"'>جدول</MudButton>
+    </MudButtonGroup>
+</MudPaper>
+
+@if (!FilteredAppointments.Any())
+{
+    <EmptyState Class="mt-4" Icon="@EmptyIcon" Title="@EmptyTitle"
+                Subtitle="@EmptySubtitle"
+                OnAction="OnAddRequested" />
+}
+else if (_viewMode == "cards")
+{
+    <MudGrid Spacing="3" Class="mt-3">
+        @foreach (var app in FilteredAppointments)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <AppointmentCard Appointment="app"
+                                 OnEdit="OnEditRequested"
+                                 OnDelete="DeleteAppointment"
+                                 OnCancel="CancelAppointment" />
+            </MudItem>
+        }
+    </MudGrid>
+}
+else
+{
+    <MudPaper Elevation="0" Class="page-card mt-3">
+        <MudTable Items="@FilteredAppointments" Class="glass-table" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>الطبيب</MudTh>
+                <MudTh>المستشفى</MudTh>
+                <MudTh>التخصص</MudTh>
+                <MudTh>التاريخ</MudTh>
+                <MudTh>الحالة</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.DoctorName</MudTd>
+                <MudTd>@context.HospitalName</MudTd>
+                <MudTd>@context.Specialty</MudTd>
+                <MudTd>@context.Date?.ToString("yyyy/MM/dd hh:mm tt")</MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Class="@($"status-chip status-{context.GetStatus()}")">
+                        @context.GetStatusLabel()
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                                   OnClick="() => OnEditRequested(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="() => DeleteAppointment(context)" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public EventCallback OnAdd { get; set; }
+    [Parameter] public EventCallback<Appointment> OnEdit { get; set; }
+    [Parameter] public string EmptyIcon { get; set; } = "🔍";
+    [Parameter] public string EmptyTitle { get; set; } = "لا توجد نتائج";
+    [Parameter] public string EmptySubtitle { get; set; } = "جرّب تغيير الفلاتر أو أضف موعداً جديداً";
+
+    private string _search = "";
+    private AppointmentStatus? _statusFilter;
+    private string? _specialtyFilter;
+    private int? _monthFilter;
+    private string _viewMode = "cards";
+
+    public int FilteredCount => FilteredAppointments.Count();
+
+    private IEnumerable<Appointment> FilteredAppointments =>
+        AppointmentService.Appointments
+            .Where(FilterFunc)
+            .OrderBy(a => a.GetStatus() == AppointmentStatus.Upcoming ? 0 : 1)
+            .ThenBy(a => a.GetStatus() == AppointmentStatus.Upcoming ? a.Date : null)
+            .ThenByDescending(a => a.GetStatus() != AppointmentStatus.Upcoming ? a.Date : null);
+
+    private bool FilterFunc(Appointment a)
+    {
+        if (_statusFilter.HasValue && a.GetStatus() != _statusFilter.Value) return false;
+        if (!string.IsNullOrEmpty(_specialtyFilter) && a.Specialty != _specialtyFilter) return false;
+        if (_monthFilter.HasValue && a.Date?.Month != _monthFilter.Value) return false;
+
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            var s = _search.Trim();
+            var match = (a.DoctorName?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
+                     || (a.HospitalName?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
+                     || (a.Specialty?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
+                     || (a.Note?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false);
+            if (!match) return false;
+        }
+        return true;
+    }
+
+    private IEnumerable<string> GetAvailableSpecialties() =>
+        AppointmentService.Appointments
+            .Where(a => !string.IsNullOrEmpty(a.Specialty))
+            .Select(a => a.Specialty!)
+            .Distinct()
+            .OrderBy(s => s);
+
+    private async Task OnAddRequested() => await OnAdd.InvokeAsync();
+    private async Task OnEditRequested(Appointment app) => await OnEdit.InvokeAsync(app);
+
+    private async Task DeleteAppointment(Appointment app)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "تأكيد الحذف", "هل أنت متأكد من حذف هذا الموعد؟",
+            yesText: "حذف", cancelText: "إلغاء");
+        if (confirmed != true) return;
+        await AppointmentService.DeleteAsync(app.Id);
+        Snackbar.Add("تم الحذف بنجاح", Severity.Success);
+    }
+
+    private async Task CancelAppointment(Appointment app)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "إلغاء الموعد", "هل تريد إلغاء هذا الموعد؟",
+            yesText: "إلغاء الموعد", cancelText: "تراجع");
+        if (confirmed != true) return;
+        await AppointmentService.CancelAsync(app);
+        Snackbar.Add("تم إلغاء الموعد", Severity.Info);
+    }
+}

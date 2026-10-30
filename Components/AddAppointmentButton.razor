@@ -1,0 +1,12 @@
+@using MudBlazor
+
+<MudButton Variant="Variant.Filled" OnClick="OnClick" Class="@($"action-btn action-btn-cartoon {Class}")">
+    <img src="images/add-appointment-icon.svg?v=2" alt="" class="btn-cartoon-icon" />
+    @Text
+</MudButton>
+
+@code {
+    [Parameter] public string Text { get; set; } = "إضافة موعد";
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

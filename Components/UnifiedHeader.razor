@@ -1,0 +1,73 @@
+@using NawafAppointment.Services
+@using NawafAppointment.Components
+@using MudBlazor
+@inject PageHeaderService HeaderService
+@inject AppSettingsService SettingsService
+@implements IDisposable
+
+<header class="unified-header">
+    <div class="unified-header-inner">
+        <div class="unified-header-brand">
+            @if (HeaderService.Current.ShowAvatar)
+            {
+                <MudAvatar Size="Size.Large" Class="hero-avatar">
+                    <span class="hero-emoji">🩺</span>
+                </MudAvatar>
+            }
+            <div class="unified-header-text">
+                <MudText Typo="Typo.h5" Class="unified-header-title fw-bold">
+                    @if (!string.IsNullOrEmpty(HeaderService.Current.IconClass))
+                    {
+                        <i class="@($"{HeaderService.Current.IconClass} me-2")"></i>
+                    }
+                    @HeaderService.Current.Title
+                </MudText>
+                @if (!string.IsNullOrEmpty(HeaderService.Current.Subtitle))
+                {
+                    <MudText Typo="Typo.body2" Class="unified-header-subtitle">
+                        @HeaderService.Current.Subtitle
+                    </MudText>
+                }
+            </div>
+        </div>
+
+        <div class="unified-header-actions">
+            @if (HeaderService.Current.ShowAddButton)
+            {
+                <AddAppointmentButton Text="@HeaderService.Current.AddButtonText"
+                                      OnClick="OnAddClick" />
+            }
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                           Class="theme-toggle-btn" OnClick="ToggleDarkMode" />
+        </div>
+    </div>
+</header>
+
+@code {
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderService.OnChange += StateHasChanged;
+        SettingsService.OnChange += OnSettingsChanged;
+        await SettingsService.LoadAsync();
+        _isDarkMode = SettingsService.Settings.DarkMode;
+    }
+
+    private void OnSettingsChanged()
+    {
+        _isDarkMode = SettingsService.Settings.DarkMode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleDarkMode() =>
+        await SettingsService.SetDarkMode(!SettingsService.Settings.DarkMode);
+
+    private async Task OnAddClick() => await HeaderService.TriggerAddAsync();
+
+    public void Dispose()
+    {
+        HeaderService.OnChange -= StateHasChanged;
+        SettingsService.OnChange -= OnSettingsChanged;
+    }
+}

@@ -1,0 +1,24 @@
+@using NawafAppointment.Services
+@using MudBlazor
+@inject ReminderService ReminderService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+@code {
+    protected override void OnInitialized()
+    {
+        ReminderService.OnReminder += ShowReminder;
+    }
+
+    private Task ShowReminder(string message, Severity severity)
+    {
+        Snackbar.Add(message, severity, cfg =>
+        {
+            cfg.VisibleStateDuration = 8000;
+            cfg.ShowCloseIcon = true;
+        });
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => ReminderService.OnReminder -= ShowReminder;
+}

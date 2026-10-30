@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2fb56c"/>
+      <stop offset="1" stop-color="#46c7c2"/>
+    </linearGradient>
+    <linearGradient id="cal" x1="28" y1="34" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eefbf4"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="78" y1="68" x2="104" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff8fab"/>
+      <stop offset="1" stop-color="#ff5e84"/>
+    </linearGradient>
+  </defs>
+
+  <!-- soft shadow -->
+  <ellipse cx="64" cy="118" rx="34" ry="6" fill="#16324f" opacity="0.12"/>
+
+  <!-- main circle -->
+  <circle cx="64" cy="64" r="52" fill="url(#bg)"/>
+  <circle cx="64" cy="64" r="52" fill="#ffffff" opacity="0.12"/>
+
+  <!-- sparkle -->
+  <path d="M98 22l2.2 6.7H107l-5.5 4 2.1 6.6-5.6-4.1-5.6 4.1 2.1-6.6-5.5-4h6.8z" fill="#ffe066"/>
+  <circle cx="30" cy="28" r="4" fill="#ffffff" opacity="0.55"/>
+
+  <!-- calendar body -->
+  <rect x="30" y="36" width="68" height="62" rx="12" fill="url(#cal)" stroke="#d7f0e2" stroke-width="2"/>
+  <rect x="30" y="36" width="68" height="18" rx="12" fill="#2f7fe2"/>
+  <rect x="30" y="46" width="68" height="8" fill="#2f7fe2"/>
+
+  <!-- calendar rings -->
+  <rect x="44" y="30" width="8" height="16" rx="4" fill="#ffd166"/>
+  <rect x="76" y="30" width="8" height="16" rx="4" fill="#ffd166"/>
+
+  <!-- calendar dots -->
+  <circle cx="46" cy="68" r="4" fill="#c9ead9"/>
+  <circle cx="64" cy="68" r="4" fill="#c9ead9"/>
+  <circle cx="82" cy="68" r="4" fill="#c9ead9"/>
+  <circle cx="46" cy="84" r="4" fill="#c9ead9"/>
+  <circle cx="64" cy="84" r="6.5" fill="#1f9b70"/>
+  <circle cx="82" cy="84" r="4" fill="#c9ead9"/>
+
+  <!-- check mark on selected day -->
+  <path d="M60.5 84.5l2.3 2.3 5.3-5.6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- cute stethoscope -->
+  <path d="M88 54c0 8.8-5.6 14.8-12.2 16.3" stroke="#16324f" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="88" cy="50" r="7" fill="#ffffff" stroke="#16324f" stroke-width="3"/>
+  <circle cx="88" cy="50" r="3" fill="#2f7fe2"/>
+
+  <!-- heart badge -->
+  <path d="M92.5 88.5c4.8-4.6 10.5-6.4 10.5-1.8 0 3.2-2.9 5.8-5.2 5.8-1.8 0-3.2-.8-5.3-3 2.1 2.2 3.5 3 5.3 3 2.3 0 5.2-2.6 5.2-5.8 0-4.6-5.7-2.8-10.5 1.8z" fill="url(#heart)"/>
+</svg>

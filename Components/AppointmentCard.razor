@@ -1,0 +1,68 @@
+@using NawafAppointment.Models
+@using MudBlazor
+
+<MudPaper Elevation="0" Class="@($"appointment-card {GetStatusClass()}")">
+    <div class="appointment-card-header">
+        <div class="appointment-card-doctor">
+            <MudIcon Icon="@Icons.Material.Filled.LocalHospital" Size="Size.Small" Class="me-1" />
+            <MudText Typo="Typo.subtitle1" Class="fw-bold">@Appointment.DoctorName</MudText>
+        </div>
+        <MudChip T="string" Size="Size.Small" Class="@($"status-chip status-{Appointment.GetStatus()}")">
+            @Appointment.GetStatusLabel()
+        </MudChip>
+    </div>
+
+    <div class="appointment-card-body">
+        <div class="appointment-card-row">
+            <i class="bi bi-building"></i>
+            <span>@Appointment.HospitalName</span>
+        </div>
+        @if (!string.IsNullOrEmpty(Appointment.Specialty))
+        {
+            <div class="appointment-card-row">
+                <i class="bi bi-heart-pulse"></i>
+                <span>@Appointment.Specialty</span>
+            </div>
+        }
+        <div class="appointment-card-row">
+            <i class="bi bi-calendar-event"></i>
+            <span>@Appointment.Date?.ToString("yyyy/MM/dd — hh:mm tt")</span>
+        </div>
+        <div class="appointment-card-row">
+            <i class="bi bi-calendar-week"></i>
+            <span>@Appointment.GetArabicDayName()</span>
+        </div>
+        @if (!string.IsNullOrEmpty(Appointment.Note))
+        {
+            <div class="appointment-card-row note-row">
+                <i class="bi bi-sticky"></i>
+                <span>@Appointment.Note</span>
+            </div>
+        }
+    </div>
+
+    @if (ShowActions)
+    {
+        <div class="appointment-card-actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"
+                           OnClick="() => OnEdit.InvokeAsync(Appointment)" />
+            @if (Appointment.GetStatus() == AppointmentStatus.Upcoming && !Appointment.IsCancelled)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Size="Size.Small"
+                               OnClick="() => OnCancel.InvokeAsync(Appointment)" />
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                           OnClick="() => OnDelete.InvokeAsync(Appointment)" />
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public Appointment Appointment { get; set; } = default!;
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public EventCallback<Appointment> OnEdit { get; set; }
+    [Parameter] public EventCallback<Appointment> OnDelete { get; set; }
+    [Parameter] public EventCallback<Appointment> OnCancel { get; set; }
+
+    private string GetStatusClass() => Appointment.GetStatus().ToString().ToLower();
+}

@@ -1,0 +1,59 @@
+@using NawafAppointment.Models
+@using MudBlazor
+
+@if (NextAppointment is not null)
+{
+    <MudPaper Elevation="0" Class="@($"countdown-banner {(IsUrgent ? "countdown-urgent" : "")}")">
+        <div class="countdown-content">
+            <div class="countdown-icon-wrap">
+                <i class="bi bi-alarm"></i>
+            </div>
+            <div class="countdown-info">
+                <MudText Typo="Typo.overline" Class="countdown-label">
+                    @(IsUrgent ? "⚠️ موعد خلال 24 ساعة!" : "أقرب موعد قادم")
+                </MudText>
+                <MudText Typo="Typo.h5" Class="countdown-doctor fw-bold">
+                    @NextAppointment.DoctorName
+                </MudText>
+                <MudText Typo="Typo.body2" Class="countdown-meta">
+                    @NextAppointment.HospitalName
+                    @if (!string.IsNullOrEmpty(NextAppointment.Specialty))
+                    {
+                        <span> — @NextAppointment.Specialty</span>
+                    }
+                </MudText>
+                <MudText Typo="Typo.body2" Class="countdown-date">
+                    @NextAppointment.Date?.ToString("yyyy/MM/dd — hh:mm tt")
+                    (@NextAppointment.GetArabicDayName())
+                </MudText>
+            </div>
+            <div class="countdown-timer">
+                @if (Days > 0)
+                {
+                    <div class="timer-block">
+                        <span class="timer-value">@Days</span>
+                        <span class="timer-unit">يوم</span>
+                    </div>
+                }
+                <div class="timer-block">
+                    <span class="timer-value">@Hours</span>
+                    <span class="timer-unit">ساعة</span>
+                </div>
+                <div class="timer-block">
+                    <span class="timer-value">@Minutes</span>
+                    <span class="timer-unit">دقيقة</span>
+                </div>
+            </div>
+        </div>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public Appointment? NextAppointment { get; set; }
+
+    private int Days => Remaining.HasValue ? (int)Remaining.Value.TotalDays : 0;
+    private int Hours => Remaining.HasValue ? (int)(Remaining.Value.TotalHours % 24) : 0;
+    private int Minutes => Remaining.HasValue ? Remaining.Value.Minutes : 0;
+    private bool IsUrgent => NextAppointment?.IsWithin24Hours() ?? false;
+    private TimeSpan? Remaining => NextAppointment?.TimeUntil();
+}

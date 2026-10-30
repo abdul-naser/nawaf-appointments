@@ -1,0 +1,100 @@
+@page "/calendar"
+@using NawafAppointment.Models
+@using NawafAppointment.Services
+@using NawafAppointment.Components
+@using MudBlazor
+@inject AppointmentService AppointmentService
+@inject ISnackbar Snackbar
+@inject PageHeaderService HeaderService
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="page-content">
+
+    @if (!AppointmentService.Appointments.Any())
+    {
+        <EmptyState Class="mt-4" Icon="📆" Title="التقويم فارغ"
+                    Subtitle="أضف مواعيد لتظهر في التقويم"
+                    OnAction="OpenAddDialog" />
+    }
+    else
+    {
+        <div class="mt-3">
+            <CalendarView Appointments="AppointmentService.Appointments"
+                          OnAppointmentClick="ShowAppointmentDetails"
+                          OnDayClickCallback="OnDayClick" />
+        </div>
+    }
+
+    @if (_selectedAppointment is not null)
+    {
+        <MudPaper Elevation="0" Class="page-card mt-3 selected-day-panel">
+            <div class="section-header mb-2">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">تفاصيل الموعد</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                               OnClick="() => _selectedAppointment = null" />
+            </div>
+            <AppointmentCard Appointment="_selectedAppointment" ShowActions="true"
+                             OnEdit="EditAppointment" OnDelete="DeleteAppointment"
+                             OnCancel="CancelAppointment" />
+        </MudPaper>
+    }
+</MudContainer>
+
+<AppointmentDialog @ref="_dialog" Visible="_dialogVisible" VisibleChanged="v => _dialogVisible = v"
+                   AppointmentService="AppointmentService" OnSaved="Refresh" />
+
+@code {
+    private AppointmentDialog? _dialog;
+    private bool _dialogVisible;
+    private Appointment? _selectedAppointment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderService.Configure(new PageHeaderOptions
+        {
+            Title = "التقويم",
+            Subtitle = "عرض المواعيد بشكل شهري أو أسبوعي",
+            IconClass = "bi bi-calendar3",
+            ShowAddButton = true,
+            AddButtonText = "إضافة"
+        });
+        HeaderService.RegisterAddHandler(OpenAddDialog);
+        AppointmentService.OnChange += StateHasChanged;
+        await AppointmentService.LoadAsync();
+    }
+
+    private async Task OpenAddDialog() { if (_dialog is not null) await _dialog.OpenForAdd(); }
+    private async Task EditAppointment(Appointment app) { if (_dialog is not null) await _dialog.OpenForEdit(app); }
+
+    private void ShowAppointmentDetails(Appointment app) => _selectedAppointment = app;
+
+    private void OnDayClick(DateTime day)
+    {
+        var apps = AppointmentService.Appointments
+            .Where(a => a.Date?.Date == day.Date && a.GetStatus() != AppointmentStatus.Cancelled)
+            .ToList();
+        if (apps.Count == 1)
+            _selectedAppointment = apps[0];
+    }
+
+    private async Task DeleteAppointment(Appointment app)
+    {
+        await AppointmentService.DeleteAsync(app.Id);
+        _selectedAppointment = null;
+        Snackbar.Add("تم الحذف", Severity.Success);
+    }
+
+    private async Task CancelAppointment(Appointment app)
+    {
+        await AppointmentService.CancelAsync(app);
+        Snackbar.Add("تم الإلغاء", Severity.Info);
+    }
+
+    private async Task Refresh() => await AppointmentService.LoadAsync();
+
+    public void Dispose()
+    {
+        HeaderService.UnregisterAddHandler();
+        AppointmentService.OnChange -= StateHasChanged;
+    }
+}

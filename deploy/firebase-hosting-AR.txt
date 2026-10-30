@@ -1,0 +1,54 @@
+══════════════════════════════════════════════════════════════
+  نشر مواعيد نواف على Firebase Hosting — خطوة بخطوة
+══════════════════════════════════════════════════════════════
+
+■ ملاحظة PowerShell:
+  إذا ظهر خطأ "running scripts is disabled"
+  استخدم firebase.cmd بدلاً من firebase
+
+──────────────────────────────────────────────────────────────
+  الخطوة 1 — تفعيل Hosting في Firebase Console
+──────────────────────────────────────────────────────────────
+  1. افتح: https://console.firebase.google.com
+  2. اختر مشروع: nawafappointments
+  3. من القائمة: Build → Hosting
+  4. اضغط Get started / البدء
+
+──────────────────────────────────────────────────────────────
+  الخطوة 2 — تسجيل الدخول (مرة واحدة)
+──────────────────────────────────────────────────────────────
+  في Terminal داخل مجلد المشروع:
+
+  firebase.cmd login
+
+  → يفتح المتصفح → سجّل دخول Google → Allow
+
+──────────────────────────────────────────────────────────────
+  الخطوة 3 — بناء ملفات الموقع
+──────────────────────────────────────────────────────────────
+  dotnet workload install wasm-tools
+  dotnet publish NawafAppointment.csproj -c Release -o publish-hosting -p:BlazorEnableCompression=false
+
+  ثم انسخ wwwroot إلى مجلد النشر:
+
+  Remove-Item publish -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory publish | Out-Null
+  Copy-Item publish-hosting\wwwroot\* publish -Recurse -Force
+  powershell -ExecutionPolicy Bypass -File deploy\fix-static-aliases.ps1 -Folder publish
+
+──────────────────────────────────────────────────────────────
+  الخطوة 4 — النشر
+──────────────────────────────────────────────────────────────
+  firebase.cmd deploy --only hosting
+
+  عند النجاح يظهر:
+  Hosting URL: https://nawafappointments.web.app
+
+──────────────────────────────────────────────────────────────
+  الخطوة 5 — تحديث لاحقاً
+──────────────────────────────────────────────────────────────
+  بعد أي تعديل على الكود:
+  1. dotnet publish ... (الخطوة 3)
+  2. firebase.cmd deploy --only hosting
+
+══════════════════════════════════════════════════════════════

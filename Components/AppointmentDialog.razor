@@ -1,0 +1,206 @@
+@using NawafAppointment.Models
+@using NawafAppointment.Services
+@using MudBlazor
+@inject ISnackbar Snackbar
+
+<MudDialog @bind-Visible="Visible" Options="_dialogOptions" Class="appointment-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @(string.IsNullOrEmpty(_model.Id) ? "إضافة موعد جديد" : "تعديل الموعد")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="appointment-form">
+            <div class="form-field">
+                <label class="form-field-label">اسم الطبيب <span class="form-optional">(اختياري)</span></label>
+                <MudTextField T="string" @bind-Value="_model.DoctorName"
+                              Placeholder="إن توفر"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" FullWidth="true" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-field-label">التخصص / العيادة <span class="form-optional">(اختياري)</span></label>
+                <MudSelect T="string" @bind-Value="_selectedSpecialty"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" FullWidth="true"
+                           Clearable="true"
+                           Placeholder="اختر التخصص ان وجد">
+                    @foreach (var spec in AppointmentService.Specialties)
+                    {
+                        <MudSelectItem T="string" Value="@spec">@spec</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            @if (_selectedSpecialty == "أخرى")
+            {
+                <div class="form-field">
+                    <label class="form-field-label">اكتب اسم التخصص</label>
+                    <MudTextField T="string" @bind-Value="_model.Specialty"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense" FullWidth="true" />
+                </div>
+            }
+
+            <div class="form-field">
+                <label class="form-field-label">المستشفى <span class="form-required">*</span></label>
+                <MudSelect T="string" @bind-Value="_selectedHospital"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" FullWidth="true"
+                           Required="true" RequiredError="يرجى اختيار المستشفى"
+                           Placeholder="— اختر المستشفى —">
+                    @foreach (var hospital in AppointmentService.Hospitals)
+                    {
+                        <MudSelectItem T="string" Value="@hospital">@hospital</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            @if (_selectedHospital == "أخرى")
+            {
+                <div class="form-field">
+                    <label class="form-field-label">اسم المستشفى <span class="form-required">*</span></label>
+                    <MudTextField T="string" @bind-Value="_model.HospitalName"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense" FullWidth="true"
+                                  Required="true" RequiredError="يرجى كتابة اسم المستشفى" />
+                </div>
+            }
+
+            <MudGrid Spacing="3" Class="form-row">
+                <MudItem xs="12" sm="6">
+                    <div class="form-field">
+                        <label class="form-field-label">التاريخ <span class="form-required">*</span></label>
+                        <MudDatePicker @bind-Date="_model.Date"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <div class="form-field">
+                        <label class="form-field-label">الوقت <span class="form-required">*</span></label>
+                        <MudTimePicker @bind-Time="_model.Time"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    </div>
+                </MudItem>
+            </MudGrid>
+
+            <div class="form-field">
+                <label class="form-field-label">ملاحظات <span class="form-optional">(اختياري)</span></label>
+                <MudTextField T="string" @bind-Value="_model.Note"
+                              Variant="Variant.Outlined" Lines="3" Margin="Margin.Dense" FullWidth="true" />
+            </div>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <div class="dialog-actions-inner">
+            <MudButton Color="Color.Primary" OnClick="Save" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Check" Class="save-btn">
+                حفظ الموعد
+            </MudButton>
+            <MudButton OnClick="Close" Variant="Variant.Outlined" Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Close" Class="cancel-btn">
+                إلغاء
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public Appointment? EditModel { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter, EditorRequired] public AppointmentService AppointmentService { get; set; } = default!;
+
+    private Appointment _model = new();
+    private string? _selectedHospital;
+    private string? _selectedSpecialty;
+    private MudForm? _form;
+    private readonly DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+
+    protected override void OnParametersSet()
+    {
+        if (Visible)
+        {
+            if (EditModel is not null)
+            {
+                _model = new Appointment
+                {
+                    Id = EditModel.Id,
+                    DoctorName = EditModel.DoctorName,
+                    HospitalName = EditModel.HospitalName,
+                    Specialty = EditModel.Specialty,
+                    Date = EditModel.Date,
+                    Time = EditModel.Date?.TimeOfDay,
+                    Note = EditModel.Note,
+                    IsCancelled = EditModel.IsCancelled
+                };
+                _selectedHospital = AppointmentService.Hospitals.Contains(EditModel.HospitalName ?? "")
+                    ? EditModel.HospitalName : "أخرى";
+                _selectedSpecialty = AppointmentService.Specialties.Contains(EditModel.Specialty ?? "")
+                    ? EditModel.Specialty
+                    : string.IsNullOrEmpty(EditModel.Specialty) ? null : "أخرى";
+            }
+            else
+            {
+                _model = new Appointment
+                {
+                    Date = DateTime.Today,
+                    Time = DateTime.Now.TimeOfDay
+                };
+                _selectedHospital = null;
+                _selectedSpecialty = null;
+            }
+        }
+    }
+
+    public async Task OpenForAdd()
+    {
+        EditModel = null;
+        _model = new Appointment { Date = DateTime.Today, Time = DateTime.Now.TimeOfDay };
+        _selectedHospital = null;
+        _selectedSpecialty = null;
+        await SetVisibleAsync(true);
+    }
+
+    public async Task OpenForEdit(Appointment appointment)
+    {
+        EditModel = appointment;
+        await SetVisibleAsync(true);
+    }
+
+    private async Task SetVisibleAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
+    }
+
+    private async Task Save()
+    {
+        if (_form is null) return;
+        await _form.ValidateAsync();
+        if (!_form.IsValid) return;
+
+        if (_selectedHospital != "أخرى" && !string.IsNullOrEmpty(_selectedHospital))
+            _model.HospitalName = _selectedHospital;
+
+        if (_selectedSpecialty != "أخرى" && !string.IsNullOrEmpty(_selectedSpecialty))
+            _model.Specialty = _selectedSpecialty;
+
+        if (_model.Date.HasValue && _model.Time.HasValue)
+            _model.Date = _model.Date.Value.Date + _model.Time.Value;
+
+        if (AppointmentService.HasConflict(_model))
+        {
+            Snackbar.Add("تنبيه: يوجد موعد آخر في نفس اليوم والوقت!", Severity.Warning);
+            return;
+        }
+
+        await AppointmentService.SaveAsync(_model);
+        await Close();
+        await OnSaved.InvokeAsync();
+        Snackbar.Add("تم حفظ الموعد بنجاح ✓", Severity.Success);
+    }
+
+    private async Task Close()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+}

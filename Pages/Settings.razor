@@ -1,0 +1,78 @@
+@page "/settings"
+@using NawafAppointment.Services
+@using MudBlazor
+@inject AppSettingsService SettingsService
+@inject PageHeaderService HeaderService
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="page-content">
+
+    <MudPaper Elevation="0" Class="page-card settings-card">
+        <div class="settings-item">
+            <div class="settings-item-info">
+                <i class="bi bi-bell settings-icon"></i>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">التذكيرات</MudText>
+                    <MudText Typo="Typo.body2" Class="text-muted">
+                        إشعار داخل التطبيق قبل الموعد بـ 24 ساعة وبساعة واحدة
+                    </MudText>
+                </div>
+            </div>
+            <MudSwitch T="bool" Value="SettingsService.Settings.RemindersEnabled"
+                       ValueChanged="OnRemindersChanged" Color="Color.Primary" />
+        </div>
+
+        <MudDivider Class="my-2" />
+
+        <div class="settings-item">
+            <div class="settings-item-info">
+                <i class="bi bi-moon-stars settings-icon"></i>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">الوضع الليلي</MudText>
+                    <MudText Typo="Typo.body2" Class="text-muted">
+                        مريح للعين في الإضاءة المنخفضة
+                    </MudText>
+                </div>
+            </div>
+            <MudSwitch T="bool" Value="SettingsService.Settings.DarkMode"
+                       ValueChanged="OnDarkModeChanged" Color="Color.Primary" />
+        </div>
+
+        <MudDivider Class="my-2" />
+
+        <div class="settings-item">
+            <div class="settings-item-info">
+                <i class="bi bi-info-circle settings-icon"></i>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">عن التطبيق</MudText>
+                    <MudText Typo="Typo.body2" Class="text-muted">
+                        مواعيد نواف — v1.0 — متابعة المواعيد الطبية
+                    </MudText>
+                </div>
+            </div>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderService.Configure(new PageHeaderOptions
+        {
+            Title = "الإعدادات",
+            Subtitle = "تخصيص تجربة الاستخدام",
+            IconClass = "bi bi-gear",
+            ShowAddButton = false
+        });
+        SettingsService.OnChange += StateHasChanged;
+        await SettingsService.LoadAsync();
+    }
+
+    private async Task OnRemindersChanged(bool enabled) =>
+        await SettingsService.SetRemindersEnabled(enabled);
+
+    private async Task OnDarkModeChanged(bool dark) =>
+        await SettingsService.SetDarkMode(dark);
+
+    public void Dispose() => SettingsService.OnChange -= StateHasChanged;
+}
